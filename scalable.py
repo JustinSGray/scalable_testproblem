@@ -4,6 +4,10 @@ from itertools import product, ifilter, compress
 from scipy.misc import comb
 import numpy as np
 
+import time
+
+
+total = 0
 
 class Polynomial(Component):
 
@@ -17,11 +21,21 @@ class Polynomial(Component):
         #self.add("c", Array(np.ones(self.n_terms), iotype="in"))
         print "making indices..."
         tuples = product(xrange(p + 1), repeat=m)
-        self.dvals = list(ifilter(lambda j : sum(j) > 0 and sum(j) <= p, tuples))
+
+        def filter_func(j): 
+            global total 
+            total += 1
+            s = sum(j)
+
+            return s > 0 and s <= p
+        start = time.time()
+        #self.dvals = list(ifilter(lambda j : sum(j) > 0 and sum(j) <= p, tuples))
+        self.dvals = list(ifilter(filter_func, tuples))
+        print "done making incicies: ", time.time() - start, total
 
     def execute(self):
         terms = {}
-        print "computing vals.."
+        #print "computing vals.."
         for i in self.dvals:
             other = [0]*self.m
             list_i = list(i)
@@ -38,7 +52,9 @@ class Polynomial(Component):
 if __name__ == "__main__":
     p = Polynomial(10,4)
     p.x = np.arange(1, 11, dtype=np.float32)
-    print len(p)
-    p.run()
-    p.run()
-    p.run()
+    print len(p.dvals)
+
+    start = time.time()
+    for i in xrange(1000): 
+        p.run()
+    print (time.time() - start)/1000.
